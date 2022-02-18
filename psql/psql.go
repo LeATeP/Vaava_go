@@ -5,5 +5,5 @@ import (
 )
 
 func Calc() {
-	fmt.Println("qwea")
+	fmt.Println("qweaasd")
 }
