@@ -5,5 +5,5 @@ import (
 )
 
 func Calc() {
-	fmt.Println("nice")
+	fmt.Println("niceasd")
 }
