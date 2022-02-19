@@ -1,10 +1,18 @@
 package main
 
 import (
-	psql "github.com/leatep/Vaava_go/psql"
+	"fmt"
+	ps "vaava/psql"
 )
 
+type asd struct {
+	name int
+}
 
 func main() {
-	psql.Calc()
+	ps.Psql_connect()
+	x, _ := ps.QuerySelect("select id, name, amount from items")
+	for _, r := range x {
+		fmt.Println(r)
+}
 }
