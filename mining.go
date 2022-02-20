@@ -12,12 +12,12 @@ import (
 func main() {
 	ps.Psql_connect()
 
+	fmt.Println("starting mining")
 	tm := 1 * time.Second
 	for {
 		time.Sleep(tm / 10)
 		// ps.Exec("update items set amount = amount + 1 where id = 1;")
 		drop := drop.GenerateDrop()
-		fmt.Println(drop)
 
 		for name, amount := range drop {
 			cmd := fmt.Sprintf("update items set amount = amount + %v where name = '%v';", amount, name)
