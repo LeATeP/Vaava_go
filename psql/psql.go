@@ -1,11 +1,13 @@
 package psql
 
 import (
-    "database/sql"
-    "fmt"
+	"database/sql"
+	"fmt"
+	"log"
 	"os"
-    _ "github.com/lib/pq"
 	ut "vaava/utils"
+
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
@@ -16,54 +18,47 @@ var (
     user     = os.Getenv("PSQL_USER")
     password = os.Getenv("PGPASSWORD")
 	port     = 5432
+	err 	   error
 )
 
-func Psql_connect() {
+func Psql_connect() error {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 							host, port, user, password, dbname)
-	var err error
-    db, err = sql.Open("postgres", psqlconn) // connecting to db
+	// Connecting to db
+    db, err = sql.Open("postgres", psqlconn); 			if err != nil { return err }
+	// checking connection if working
+    err = db.Ping(); 									if err != nil { return err }
 
-	ut.CheckError(err, "failed open connection sql.Open")
-
-    err = db.Ping() // check connection
-
-    ut.CheckError(err, "failed ping")
     fmt.Println("Connected!")
+	return nil
 }
 
 func QuerySelect(sql_cmd string) ([]map[string]string, error) {
-	rows, err 		:= db.Query(sql_cmd)
-	ut.CheckError(err, "attempt to query db.Query")
+	rows, err 		:= db.Query(sql_cmd);				if err != nil {	return nil, err }
 	defer rows.Close()
 
 	columns, _ 		:= rows.Columns()
-	rowsStack := iterRows(rows, len(columns))
+	rowsStack, err := iterRows(rows, len(columns));		if err != nil {	return nil, err }
 
 	formedMap 		:= ut.ConvetIntoMap(rowsStack, columns)
 	return formedMap, nil
 }
 
-func iterRows (rows *sql.Rows, lent int) *[][]string {
-	var err error
+func iterRows (rows *sql.Rows, lent int) (*[][]string, error) {
 	rowsStack		:= [][]string{}
 
 	for rows.Next() {
 		content 	:= make([]string, lent)
 		pointers 	:= ut.CreatePointers(&content)
 	
-		err := rows.Scan(pointers...)
-		ut.CheckError(err, "attempt to Scan rows.Next")
-		
+		err := rows.Scan(pointers...);					if err != nil {	return nil, err }
 		rowsStack 	= append(rowsStack, content)
 	}
-	err = rows.Err()
-	ut.CheckError(err, "attempt ending rows.Err")
-
-	return &rowsStack
+	err = rows.Err();									if err != nil {	return nil, err }
+	return &rowsStack, nil
 }
 
-func Exec(sql_cmd string) bool {
-	_, err := db.Exec(sql_cmd)
-	return err == nil
+func Exec(sql_cmd string) error {
+	_, err := db.Exec(sql_cmd);							if err != nil { return err }
+	return nil
 }

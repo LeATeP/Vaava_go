@@ -26,9 +26,3 @@ func ConvetIntoMap(slices *[][]string, columns []string) []map[string]string {
 	}
 	return newMaps
 }
-
-func CheckError(err error, error_name string) {
-	if err != nil {
-		log.Fatal(err, "\n--- ", error_name, " ---")
-	}
-}
