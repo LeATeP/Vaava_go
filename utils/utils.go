@@ -1,9 +1,5 @@
 package utils
 
-import (
-	"log"
-)
-
 
 func CreatePointers(content *[]string) ([]interface{}) {
 	point 		:= make([]interface{}, len(*content))

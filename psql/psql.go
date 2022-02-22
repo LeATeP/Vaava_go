@@ -3,7 +3,6 @@ package psql
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	ut "vaava/utils"
 

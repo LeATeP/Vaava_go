@@ -6,16 +6,24 @@ import (
 	"time"
 	"log"
 	drop "vaava/package/drop"
-	ps "vaava/psql"
+	"vaava/psql"
 )
 // the first mining script will do is to pull drop chances from sql
 var (
 	err error
 )
 
+func asd(y []int) {
+	y[0] = 10
+}
 
 func main() {
-	err = ps.Psql_connect()
+	x := []int{1,2,3}
+	asd(x)
+	fmt.Println(x)
+
+
+	err = psql.Psql_connect()
 	if err != nil {	log.Fatal(err) }
 
 	fmt.Println("starting mining")
@@ -28,7 +36,7 @@ func main() {
 
 		for name, amount := range drop {
 			cmd := fmt.Sprintf("update items set amount = amount + %v where name = '%v';", amount, name)
-			err = ps.Exec(cmd)
+			err = psql.Exec(cmd)
 			if err != nil {	log.Fatal(err) }
 		}
 	}
@@ -37,5 +45,5 @@ func main() {
 func setContainerId() {
 	hostname := os.Getenv("HOSTHAME")
 	x := fmt.Sprintf("%v", hostname)
-	ps.Exec(x)
+	psql.Exec(x)
 }
