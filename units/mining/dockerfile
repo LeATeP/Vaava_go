@@ -1,0 +1,10 @@
+FROM scratch
+
+COPY mining /
+
+ENV PSQL_HOST=postgres
+ENV PSQL_DB=sql
+ENV PSQL_USER=postgres
+ENV PGPASSWORD=123
+
+CMD ["/mining"]
