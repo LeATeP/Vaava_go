@@ -19,7 +19,9 @@ func main() {
 
 	fmt.Println("starting mining")
 	tm := time.Second
+	count, xp := 0, 0
 	for {
+		count ++
 		time.Sleep(tm)
 		// ps.Exec("update items set amount = amount + 1 where id = 1;")
 		drop := drop.GenerateDrop()
@@ -29,6 +31,15 @@ func main() {
 			cmd := fmt.Sprintf("update items set amount = amount + %v where name = '%v';", amount, name)
 			err = psql.Exec(cmd)
 			if err != nil {	log.Fatal(err) }
+			xp += amount
+		}
+		if count == 10 {
+			count = 0
+			cmd := fmt.Sprintf("update unit set xp = xp + %v where name = '%v'", xp, "Miner")
+			err = psql.Exec(cmd)
+			if err != nil {	log.Fatal(err) }
+			
+			xp = 0
 		}
 	}
 }
