@@ -4,60 +4,94 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	ut "vaava/utils"
-
+	// ut "vaava/utils"
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
+type dbStruct struct {
+	conn *sql.DB
+}
+
+type dbInterface interface {
+	Exec(string) error
+	Ping() error
+}
+
+type con_config struct {
+	hostname string
+    host     string
+    dbname   string
+    user     string
+    password string
+	port     int
+}
 var (
-	// hostname = os.Getenv("HOSTHAME")
-    host     = os.Getenv("PSQL_HOST")
-    dbname   = os.Getenv("PSQL_DB")
-    user     = os.Getenv("PSQL_USER")
-    password = os.Getenv("PGPASSWORD")
-	port     = 5432
-	err 	   error
+	d dbStruct
+	err error
 )
 
-func Psql_connect() error {
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-							host, port, user, password, dbname)
-	// Connecting to db
-    db, err = sql.Open("postgres", psqlconn); 			if err != nil { return err }
-	// checking connection if working
-    err = db.Ping(); 									if err != nil { return err }
-
-    fmt.Println("Connected!")
-	return nil
-}
-
-func QuerySelect(sql_cmd string) ([]map[string]string, error) {
-	rows, err 		:= db.Query(sql_cmd);				if err != nil {	return nil, err }
-	defer rows.Close()
-
-	columns, _ 		:= rows.Columns()
-	rowsStack, err := iterRows(rows, len(columns));		if err != nil {	return nil, err }
-
-	formedMap 		:= ut.ConvetIntoMap(rowsStack, columns)
-	return formedMap, nil
-}
-
-func iterRows (rows *sql.Rows, lent int) (*[][]string, error) {
-	rowsStack		:= [][]string{}
-
-	for rows.Next() {
-		content 	:= make([]string, lent)
-		pointers 	:= ut.CreatePointers(&content)
-	
-		err := rows.Scan(pointers...);					if err != nil {	return nil, err }
-		rowsStack 	= append(rowsStack, content)
+func init_config() *con_config {
+	return &con_config{
+		hostname:   os.Getenv("HOSTHAME"),
+		host: 		os.Getenv("PSQL_HOST"),
+  		dbname: 	os.Getenv("PSQL_DB"),
+  		user: 		os.Getenv("PSQL_USER"),
+  		password:   os.Getenv("PGPASSWORD"),
+		port: 		5432,
 	}
-	err = rows.Err();									if err != nil {	return nil, err }
-	return &rowsStack, nil
 }
 
-func Exec(sql_cmd string) error {
-	_, err := db.Exec(sql_cmd);							if err != nil { return err }
+func Psql_connect() (dbInterface, error) {
+	config := init_config()
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+							config.host, config.port, config.user, config.password, config.dbname)
+
+
+
+	// Connecting to db
+    d.conn, err = sql.Open("postgres", psqlconn)			
+	if err != nil { return nil, err }
+
+
+	// checking connection if working
+    err = d.Ping(); 									
+	if err != nil { return nil, err }
+    fmt.Println("Connected!")
+
+	return dbInterface(&d), nil
+}
+
+// func QuerySelect(sql_cmd string) ([]map[string]string, error) {
+	// rows, err 		:= db.Query(sql_cmd);				if err != nil {	return nil, err }
+	// defer rows.Close()
+// 
+	// columns, _ 		:= rows.Columns()
+	// rowsStack, err := iterRows(rows, len(columns));		if err != nil {	return nil, err }
+// 
+	// formedMap 		:= ut.ConvetIntoMap(rowsStack, columns)
+	// return formedMap, nil
+// }
+// 
+// func iterRows (rows *sql.Rows, lent int) (*[][]string, error) {
+	// rowsStack		:= [][]string{}
+// 
+	// for rows.Next() {
+		// content 	:= make([]string, lent)
+		// pointers 	:= ut.CreatePointers(&content)
+	// 
+		// err := rows.Scan(pointers...);					if err != nil {	return nil, err }
+		// rowsStack 	= append(rowsStack, content)
+	// }
+	// err = rows.Err();									if err != nil {	return nil, err }
+	// return &rowsStack, nil
+// }
+
+func (d *dbStruct) Exec(sql_cmd string) error {
+	_, err := d.conn.Exec(sql_cmd)					
+	if err != nil { return err }
 	return nil
+}
+
+func (d *dbStruct) Ping() error {
+	return d.conn.Ping()
 }

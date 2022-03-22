@@ -64,3 +64,16 @@ select * from levels;
 
 insert into levels(level, xp, total)
 values (1, 0, 0);
+
+
+-- SELECT
+--     id,
+--     points,
+--     round(points * 1.0 / sum(points) OVER (), 3) as piece_of_pie,
+--     round(points * 1.0 / sum(points) OVER (), 3) * 1000000 as piece_of_pie,
+--     sum(points) OVER ()
+-- FROM bonuses
+-- order by 3 desc;
+
+
+
