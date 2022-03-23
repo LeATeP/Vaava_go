@@ -20,5 +20,5 @@ func main() {
     for _, w := range data {
         fmt.Printf("[%v] %v: %v\n", w["id"], w["name"], w["amount"])
     }
-
+	
 }
