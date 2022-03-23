@@ -59,8 +59,6 @@ func Psql_connect() (dbInterface, error) {
 	if err 		!= nil { return nil, err }
     fmt.Println("Connected!")
 
-	content, pointers := MakePointers(5)
-	fmt.Println(content, pointers)
 	return dbInterface(&d), nil
 }
 

@@ -16,6 +16,9 @@ func main() {
 
     data, err := db.QuerySelect("select * from items;")
     if err != nil { log.Fatalln(err) }
-    fmt.Println(data)
+
+    for _, w := range data {
+        fmt.Printf("[%v] %v: %v\n", w["id"], w["name"], w["amount"])
+    }
 
 }
