@@ -3,6 +3,7 @@ package main
 import (
 	// "fmt"
 	// "math/rand"
+	"fmt"
 	"log"
 	// "time"
 	"vaava/psql"
@@ -10,10 +11,11 @@ import (
 
 
 func main() {
-	db, err := psql.Psql_connect()
-	if err != nil { log.Fatalln(err) }
+    db, err := psql.Psql_connect()
+    if err != nil { log.Fatalln(err) }
 
-	err = db.Exec("update items set amount = amount +1000 where name = 'Rock';")
-	if err != nil { log.Fatalln(err) }
-	
+    data, err := db.QuerySelect("select * from items;")
+    if err != nil { log.Fatalln(err) }
+    fmt.Println(data)
+
 }
