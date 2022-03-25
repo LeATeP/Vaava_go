@@ -27,25 +27,29 @@ func init_config() *con_config {
 	}
 }
 
-func convetIntoMap(slices [][]string, columns []string) []map[string]string {
-	newMaps 	:= []map[string]string{}
+func convetIntoMap(slices [][]any, columns []string) []map[string]any {
+	newMaps 	:= make([]map[string]any, len(slices))
 
-	for _, data := range slices {
-		newMap 	:= map[string]string{}
-		for i, colName := range columns {
-			newMap[colName] = data[i]
+	for i, data := range slices {
+		newMap 	:= map[string]any{}
+		for r, colName := range columns {
+			newMap[colName] = data[r]
 		}
-		newMaps = append(newMaps, newMap)
+		newMaps[i] = newMap
 	}
-	_, exist := newMaps[0]["id"]
-	if exist {
-  		sort.Slice(newMaps, func(i, j int) bool { return newMaps[i]["id"] < newMaps[j]["id"]})
-	}
+	sortSliceOfMap(newMaps)
 	return newMaps
 }
 
-func makePointers(rows_len int) ([]string, []any) {
-	content  := make([]string, rows_len)
+func sortSliceOfMap(newMaps []map[string]any) {
+	_, exist := newMaps[0]["id"]
+	if exist {
+  		sort.Slice(newMaps, func(i, j int) bool { return newMaps[i]["id"].(int64) < newMaps[j]["id"].(int64)})
+	}
+}
+
+func makePointers(rows_len int) ([]any, []any) {
+	content  := make([]any, rows_len)
  	pointers := make([]any, rows_len)
 	for i := range content {
 		pointers[i] = &content[i]

@@ -11,11 +11,12 @@ import (
 type dbStruct struct {
 	conn *sql.DB
 }
+
 // dbInterface to package all methods and to be accessible and understanable
 type dbInterface interface {
 	Exec(string) error
 	Ping() error
-	QuerySelect(string) ([]map[string]string, error)
+	QuerySelect(string) ([]map[string]any, error)
 }
 
 var (
@@ -42,7 +43,7 @@ func Psql_connect() (dbInterface, error) {
 }
 
 // QuerySelect is request data from db, and reformat it into accessible Map format
-func (d *dbStruct) QuerySelect(sql_cmd string) ([]map[string]string, error) {
+func (d *dbStruct) QuerySelect(sql_cmd string) ([]map[string]any, error) {
 	rows, err 		:= d.conn.Query(sql_cmd)
 	if err != nil {	return nil, err }
 	defer rows.Close()
@@ -57,8 +58,8 @@ func (d *dbStruct) QuerySelect(sql_cmd string) ([]map[string]string, error) {
 	return formedMap, nil
 }
 // iterRows help to reformat data, that came from request in QuerySelect
-func iterRows (rows *sql.Rows, row_length int) ([][]string, error) {
-	rowsStack		:= [][]string{}
+func iterRows (rows *sql.Rows, row_length int) ([][]any, error) {
+	rowsStack		:= [][]any{}
 
 	for rows.Next() {
 		content, pointers := makePointers(row_length)
