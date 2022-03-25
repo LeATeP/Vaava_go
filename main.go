@@ -18,7 +18,8 @@ func main() {
     if err != nil { log.Fatalln(err) }
 
     for _, w := range data {
-        fmt.Printf("[%v] %v: %v\n", w["id"], w["name"], w["amount"])
-    }
+		fmt.Printf("[%v] %-15v %d\n", w["id"], w["name"], w["amount"])
+	}
+
 	
 }
