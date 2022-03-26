@@ -1,11 +1,12 @@
-// package psql utils.go is for fn used in psql 
+// package psql utils.go is for fn used in psql
 // but not necessary to be accessible outside of the package
 package psql
 
 import (
-	"sort"
 	"os"
+	"sort"
 )
+
 // con_config is connection config
 type con_config struct {
 	hostname string
@@ -42,7 +43,7 @@ func convetIntoMap(slices [][]any, columns []string) []map[string]any {
 }
 
 func sortSliceOfMap(newMaps []map[string]any) {
-	_, exist := newMaps[0]["id"]
+	_, exist := newMaps[0]["id"].(int64)
 	if exist {
   		sort.Slice(newMaps, func(i, j int) bool { return newMaps[i]["id"].(int64) < newMaps[j]["id"].(int64)})
 	}
