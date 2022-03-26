@@ -2,7 +2,6 @@ package psql
 
 import (
 	// "errors"
-	"fmt"
 	"testing"
 )
 

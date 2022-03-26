@@ -37,7 +37,6 @@ func Psql_connect() (dbInterface, error) {
 	// checking connection if working
     err 		= d.Ping(); 									
 	if err 		!= nil { return nil, err }
-    fmt.Println("Connected!")
 
 	return dbInterface(&d), nil
 }
