@@ -12,8 +12,8 @@ type dbStruct struct {
 	conn *sql.DB
 }
 
-// dbInterface to package all methods and to be accessible and understanable
-type dbInterface interface {
+// DbInterface to package all methods and to be accessible and understanable
+type DbInterface interface {
 	Exec(string) error
 	Ping() error
 	QuerySelect(string) ([]map[string]any, error)
@@ -25,7 +25,7 @@ var (
 )
 
 // Psql_connect is main initialize fn, that connect to db and give interface
-func Psql_connect() (dbInterface, error) {
+func Psql_connect() (DbInterface, error) {
 	config 		:= init_config()
 	psqlconn 	:= fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 							config.host, config.port, config.user, config.password, config.dbname)
@@ -38,7 +38,7 @@ func Psql_connect() (dbInterface, error) {
     err 		= d.Ping(); 									
 	if err 		!= nil { return nil, err }
 
-	return dbInterface(&d), nil
+	return DbInterface(&d), nil
 }
 
 // QuerySelect is request data from db, and reformat it into accessible Map format

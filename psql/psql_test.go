@@ -8,7 +8,7 @@ import (
 func TestDbConnection(t *testing.T) {
 	tests := []struct {
 		description string
-		wantErr error
+		wantErr 	error
 	}{
 		{
 		description: "Establishing Connection",
@@ -20,7 +20,7 @@ func TestDbConnection(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			_, err := Psql_connect()
 			if err != nil {
-				t.Errorf("failed Psql_connect, got error: %v", err.Error())
+				t.Errorf("failed Psql_connect, got error: %v", err)
 			}
 		})
 	}
@@ -29,15 +29,15 @@ func TestDbConnection(t *testing.T) {
 func TestMapHandler(t *testing.T) {
 	tests := []struct {
 		description string
-		mapKeys []string
-		slices [][]any
-		want []map[string]any
+		mapKeys 	[]string
+		slices 		[][]any
+		want 		[]map[string]any
 	}{
 		{
 			description: "convert slice of slices, with type 'any' into map",
 			mapKeys: []string{"s1"},
-			slices: [][]any{{15}, {"qwe"}},
-			want: []map[string]any{{"s1": 15}, {"s1": "qwe"}},
+			slices:	 [][]any{{15}, {"qwe"}},
+			want: 	 []map[string]any{{"s1": 15}, {"s1": "qwe"}},
 		},
 	}
 
