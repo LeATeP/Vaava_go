@@ -5,23 +5,34 @@ import (
 	// "math/rand"
 	"fmt"
 	"log"
-
-	// "time"
+	"math/rand"
+	"time"
 	"vaava/psql"
 )
-
-var db psql.DbInterface
+var server serverHandler
 
 func main() {
 	var err error
-    db, err = psql.Psql_connect()
+    // db, err = psql.Psql_connect()
+    // if err != nil { log.Fatalln(err) }
+
+	server, err 	= client()
     if err != nil { log.Fatalln(err) }
 
-	query("")
-
+	for {
+		num := rand.Int63n(10000)
+		msg := fmt.Sprintf("client1: %v\n", num)
+		err := server.sendMsg(msg)
+		if err != nil {
+			log.Printf("failed send msg: %v", err)
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	// query(db, "")
 }
 
-func query(cmd string) error {
+func query(db psql.DbInterface, cmd string) error {
     data, err := db.QuerySelect("select * from items;")
     if err != nil { log.Fatalln(err) }
 

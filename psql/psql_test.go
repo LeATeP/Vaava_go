@@ -20,7 +20,7 @@ func TestDbConnection(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			_, err := Psql_connect()
 			if err != nil {
-				t.Errorf("failed Psql_connect, got error: %v", err.Error())
+				t.Errorf("failed Psql_connect, got error: %v", err)
 			}
 		})
 	}
