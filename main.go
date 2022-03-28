@@ -1,36 +1,39 @@
 package main
 
 import (
-	// "fmt"
-	// "math/rand"
 	"fmt"
 	"log"
-	"math/rand"
 	"time"
 	"vaava/psql"
+	"vaava/server"
 )
-var server serverHandler
 
 func main() {
-	var err error
-    // db, err = psql.Psql_connect()
-    // if err != nil { log.Fatalln(err) }
-
-	server, err 	= client()
-    if err != nil { log.Fatalln(err) }
-
-	for {
-		num := rand.Int63n(10000)
-		msg := fmt.Sprintf("client1: %v\n", num)
-		err := server.sendMsg(msg)
-		if err != nil {
-			log.Printf("failed send msg: %v", err)
-			break
-		}
-		time.Sleep(time.Second)
-	}
-	// query(db, "")
+	conn := server.NewClient()
+	
+	msg := server.MsgFormat{MsgCode: "01", Name: "asd", Num: 100}
+	time.Sleep(time.Second)
+	conn.SendMsg(&msg)
+	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 func query(db psql.DbInterface, cmd string) error {
     data, err := db.QuerySelect("select * from items;")
