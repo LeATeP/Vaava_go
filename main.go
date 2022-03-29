@@ -9,11 +9,10 @@ import (
 )
 
 func main() {
-	conn := server.NewClient()
+	srv := server.NewClient()
 	
-	msg := server.MsgFormat{MsgCode: "01", Name: "asd", Num: 100}
 	time.Sleep(time.Second)
-	conn.SendMsg(&msg)
+	srv.Send.Encode(&server.MsgFormat{MsgCode: "01", Name: "asd", Num: 100})
 	
 }
 

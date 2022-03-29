@@ -10,11 +10,13 @@ func main() {
 	s := server.NewServer()
 	go s.AcceptConn()
 
-	fmt.Println("server Ready")
+	fmt.Println("server ready")
 
 	for {
 		for i, v := range s.ClientConn {
-			fmt.Println(i, v.ReceiveMsg())
+			msg := server.MsgFormat{}
+			err := v.Receive.Decode(&msg)
+			fmt.Println(msg, err)
 		}
 		time.Sleep(time.Second)
 	}
