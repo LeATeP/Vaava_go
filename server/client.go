@@ -13,16 +13,17 @@ func NewClient() *Client {
 		log.Printf("[failed to connect]: %v\n", err)
 	}
 	return &Client{
-		Conn: conn,
-		Receive: gob.NewDecoder(conn),
-		Send: gob.NewEncoder(conn),
+		Conn: 		 	  conn,
+		Receive: 	 	  gob.NewDecoder(conn),
+		Send: 			  gob.NewEncoder(conn),
 		AboutClient: &AboutClientInfo{
-			Id: 1,
-			Name: "mining",
-			Doing: "mine",
-			Start: time.Now().UTC(),
-			Running: true,
-			ContainerId: "693210",
+			Id: 		  1,
+			Name: 		  "mining",
+			Status: 	  "mine",
+			Start: 		  time.Now().UTC(),
+			Running:  	  true,
+			ContainerId:  "693210",
+			TickDataSend: time.Second,
 		},
 	}
 }

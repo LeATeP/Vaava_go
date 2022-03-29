@@ -38,8 +38,9 @@ func (s *Server) AcceptConn() {
 		s.ClientConn[i] = &Client{
 			Conn: 	 conn, 
 			Receive: gob.NewDecoder(conn), 
-			Send: 	 gob.NewEncoder(conn)}
+			Send: 	 gob.NewEncoder(conn),
 		}
+	}
 }
 
 // c.Send.Encode

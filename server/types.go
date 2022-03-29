@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/gob"
-	"math/rand"
 	"net"
 	"time"
 )
@@ -39,12 +38,12 @@ type Stats struct {
 type AboutClientInfo struct {
 	Id 			 int
 	Name 		 string
-	Doing 		 string
+	Status 		 string
 	Start 		 time.Time
+	TickDataSend time.Duration
 	Running 	 bool
 	Shutdown  	 bool
 	ContainerId  string
-	RandSeed 	*rand.Rand
 }
 type Client struct {
 	Conn		 net.Conn
@@ -53,12 +52,13 @@ type Client struct {
 	AboutClient *AboutClientInfo
 }
 type MsgFormat struct {
-	MsgCode string
-	Name 	string
-	Num 	int
+	MsgCode   int
+	Resources Resources
+	CInfo     AboutClientInfo
+	SInfo 	  Info
 }
 type Resources struct {
-	Coins int
+	Materials map[string]uint64
 }
 // ---------------------------------------------
 // Client Specific types
