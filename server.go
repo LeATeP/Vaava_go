@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"vaava/server"
+	"server"
 )
 
 func main() {
