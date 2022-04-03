@@ -3,31 +3,43 @@ package main
 import (
 	"fmt"
 	"log"
+	"psql"
+	"server"
 	"time"
-	"vaava/psql"
-	"vaava/server"
 )
-
 func main() {
-	s := server.NewClient()
-	res := server.Resources{map[string]uint64{}}
-	sleep := time.Second / 10
 
-	for ;s.AboutClient.Running ;time.Sleep(sleep) {
-		res.Materials["Ore"] += 1
-		if res.Materials["Ore"] > 10 {
-			err := s.Send.Encode(&server.MsgFormat{
-				MsgCode: 6, 
-				Resources: res})
-			if err != nil {
-				log.Printf("Can't sent msg: %v\n", err)
-				s.Conn.Close()
-				s.AboutClient.Running = false
-				break
-			}
-			res = server.Resources{map[string]uint64{}}
-		}
-	}
+
+	db, err := psql.Psql_connect()
+	if err != nil { return }
+ 
+	data, err := db.InnateQuery("select id, name from items order by id;", "items")
+	if err != nil { return }
+	fmt.Println(data)
+	// for _, d := range data {
+		// fmt.Println(d)
+	// }	
+
+
+	// s := server.NewClient()
+	// res := server.Resources{map[string]uint64{}}
+	// sleep := time.Second / 10
+// 
+	// for ;s.AboutClient.Running ;time.Sleep(sleep) {
+		// res.Materials["Ore"] += 1
+		// if res.Materials["Ore"] > 10 {
+			// err := s.Send.Encode(&server.MsgFormat{
+				// MsgCode: 6, 
+				// Resources: res})
+			// if err != nil {
+				// log.Printf("Can't sent msg: %v\n", err)
+				// s.Conn.Close()
+				// s.AboutClient.Running = false
+				// break
+			// }
+			// res = server.Resources{map[string]uint64{}}
+		// }
+	// }
 }
 func ServerConn(s *server.Client) {
 	sleep := time.Second
@@ -50,29 +62,4 @@ func ServerConn(s *server.Client) {
 			log.Println("0, something wrong")
 		}
 	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-func query(db psql.DbInterface, cmd string) error {
-    data, err := db.QuerySelect("select * from items;")
-    if err != nil { log.Fatalln(err) }
-
-    for _, w := range data {
-		fmt.Printf("[%v] %-15v %d\n", w["id"], w["name"], w["amount"])
-	}
-	return nil
 }

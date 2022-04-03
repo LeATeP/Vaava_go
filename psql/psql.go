@@ -4,83 +4,74 @@ package psql
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
 	_ "github.com/lib/pq"
 )
 
-// dbStruct is to be used as a `connection` handler, for method to use
-type dbStruct struct {
-	conn *sql.DB
-}
-
-// DbInterface to package all methods and to be accessible and understanable
-type DbInterface interface {
-	Exec(string) error
-	Ping() error
-	QuerySelect(string) ([]map[string]any, error)
-}
-
-var (
-	d dbStruct
-	err error
-)
-
 // Psql_connect is main initialize fn, that connect to db and give interface
-func Psql_connect() (DbInterface, error) {
+func Psql_connect() (d DBStruct, err error) {
 	config 		:= init_config()
 	psqlconn 	:= fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 							config.host, config.port, config.user, config.password, config.dbname)
 	
-	// Connecting to db
-    d.conn, err = sql.Open("postgres", psqlconn)			
-	if err	   	!= nil { return nil, err }
-
-	// checking connection if working
-    err 		= d.Ping(); 									
-	if err 		!= nil { return nil, err }
-
-	return DbInterface(&d), nil
-}
-
-// QuerySelect is request data from db, and reformat it into accessible Map format
-func (d *dbStruct) QuerySelect(sql_cmd string) ([]map[string]any, error) {
-	rows, err 		:= d.conn.Query(sql_cmd)
-	if err != nil {	return nil, err }
-	defer rows.Close()
-
-	columns, err 	:= rows.Columns()
-	if err != nil {	return nil, err }
-
-	rowsStack, err  := iterRows(rows, len(columns))
-	if err != nil {	return nil, err }
-
-	formedMap 		:= convetIntoMap(rowsStack, columns)
-	return formedMap, nil
-}
-// iterRows help to reformat data, that came from request in QuerySelect
-func iterRows (rows *sql.Rows, row_length int) ([][]any, error) {
-	rowsStack		:= [][]any{}
-
-	for rows.Next() {
-		content, pointers := makePointers(row_length)
-
-		err := rows.Scan(pointers...)
-		if err != nil {	return nil, err }
-		
-		rowsStack 	= append(rowsStack, content)
+	// prepare connecting to db
+    d.DB, err = sql.Open("postgres", psqlconn)
+	if err != nil {
+		return d, err
 	}
-	err = rows.Err()
-	if err != nil {	return nil, err }
-	
-	return rowsStack, nil
+	// checking connection if working
+    if err = d.DB.Ping(); err != nil {
+		return d, err
+	}
+	return d, err
 }
-// Exec is a main func to exec commands in sql that isn't required output
-// like update, insert, delete
-func (d *dbStruct) Exec(sql_cmd string) error {
-	_, err := d.conn.Exec(sql_cmd)					
-	if err != nil { return err }
-	return nil
+func (d *DBStruct) InnateQuery(query string, tableName string) ([]TableItems, error) {
+	rows, err := d.DB.Query(query)
+	if err != nil {
+		log.Printf("[Err in Query]: %v\n", err)
+		return []TableItems{}, nil
+	}
+	sliceData, err := iterRows(rows, tableName)
+	if err != nil {
+		log.Printf("[Err in iterRows] --- %v\n", err)
+	}
+	return sliceData, nil
+
 }
-// Ping to check if connection to db is stable
-func (d *dbStruct) Ping() error {
-	return d.conn.Ping()
+func iterRows(rows *sql.Rows, tableName string) ([]TableItems, error) {
+	sliceData := []TableItems{}
+	columns, _   := rows.Columns()
+	defer rows.Close()
+	for rows.Next() {
+		data, pointers := itemsPointers(columns, tableName)
+		if err := rows.Scan(pointers...); err != nil {
+			log.Printf("[Err in iter of rows]: %v\n", err)
+			rows.Close()
+		}
+		sliceData = append(sliceData, *data)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		log.Printf("[rows.Err]: %v\n", err)
+		return []TableItems{}, err
+	}
+	return sliceData, nil
+}
+func itemsPointers(col []string, tableName string) (*TableItems, []any) {
+	data := new(TableItems)
+	p    := []any{}
+	item := map[string]any{
+		"id": 			&data.Id,
+		"name": 		&data.Name,
+		"amount": 		&data.Amount,
+		"amount_limit": &data.MaxAmount,
+	}
+	for _, colName := range col {
+		value, exist := item[colName]
+		if exist {
+			p = append(p, value)
+		}
+	}
+	return data, p
 }
