@@ -20,13 +20,13 @@ func NewServer() *Server {
 		Info: 		info,
 		Running: 	true,
 		Stats: 		&Stats{},
-		ClientConn: map[uint64]*Client{},
+		ClientConn: map[int64]*Client{},
 		Listener: 	ls,
 	}
 	return &server
 }
 func (s *Server) AcceptConn() {
-	var i uint64
+	var i int64
 	for ; s.Running ;i++ {
 		conn, err := s.Listener.Accept() // listen for clients
 		if err != nil {

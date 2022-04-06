@@ -18,8 +18,6 @@ func NewClient() *Client {
 		Send: 			  gob.NewEncoder(conn),
 		AboutClient: &AboutClientInfo{
 			Id: 		  1,
-			Name: 		  "mining",
-			Status: 	  "mine",
 			Start: 		  time.Now().UTC(),
 			Running:  	  true,
 			ContainerId:  "693210",
