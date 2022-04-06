@@ -11,15 +11,17 @@ import (
 
 // Psql_connect is main initialize fn, that connect to db and give interface
 func Psql_connect() (p Psql, err error) {
-	config 	 := init_config()
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	config 	  := init_config()
+	psqlconn  := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 							config.host, config.port, config.user, config.password, config.dbname)
 	// prepare connecting to db
     p.Sql, err = sql.Open("postgres", psqlconn)
-	if err == nil { return p, err
+	if err != nil { 
+		return p, err
 	}
 	// checking connection if working
-    if err = p.Sql.Ping(); err != nil {
+    err 	= p.Sql.Ping()
+	if err != nil {
 		return p, err
 	}
 	return p, nil
