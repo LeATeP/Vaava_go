@@ -17,7 +17,7 @@ type Info struct {
 	Id			 string
 	Name 		 string
 	ContainerId  string
-	MaxLoad 	 int
+	MaxLoad 	 int64
 }
 type Server struct {
 	Start 		 time.Time
@@ -27,7 +27,7 @@ type Server struct {
 	Shutdown  	 bool
 	Reloading	 bool
 	Listener 	 net.Listener
-	ClientConn   map[uint64]*Client  	  // info the server have about client
+	ClientConn   map[int64]*Client  	  // info the server have about client
 }
 type Stats struct {
 	InMsgs	  	 int64
@@ -36,14 +36,13 @@ type Stats struct {
 	OutBytes     int64
 }
 type AboutClientInfo struct {
-	Id 			 int
-	Name 		 string
-	Status 		 string
+	Id 			 int64
 	Start 		 time.Time
 	TickDataSend time.Duration
 	Running 	 bool
 	Shutdown  	 bool
 	ContainerId  string
+	Unit	 	 UnitInfo
 }
 type Client struct {
 	Conn		 net.Conn
@@ -51,14 +50,21 @@ type Client struct {
 	Receive		*gob.Decoder
 	AboutClient *AboutClientInfo
 }
+type UnitInfo struct {
+	Id 		 int64
+	Name 	 string
+	Status 	 string
+	Health   int64
+	Strength int64
+}
 type MsgFormat struct {
-	MsgCode   int
+	MsgCode   int64
 	Resources Resources
 	CInfo     AboutClientInfo
 	SInfo 	  Info
 }
 type Resources struct {
-	Materials map[string]uint64
+	Materials map[string]int64
 }
 // ---------------------------------------------
 // Client Specific types
