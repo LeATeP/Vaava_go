@@ -13,7 +13,7 @@ func main() {
 
 	fmt.Println("server ready")
 
-	res := server.Resources{map[string]uint64{}}
+	res := server.Resources{map[string]int64{}}
 	go receivingLoop(s, &res)
 	time.Sleep(time.Second * 100)
 

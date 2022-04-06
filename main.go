@@ -3,43 +3,37 @@ package main
 import (
 	"fmt"
 	"log"
-	"psql"
 	"server"
 	"time"
 )
+// implementation of mining
+// 1. connect to a server
+// 2. [wait mode], wait for signal 2, info about unit, or what to do
+// 3. start independent loop to listen to server, for change unit info or shutdown
+// 4. main loop is unit operation, sending info req by server to operate and manage unit
 func main() {
+	fmt.Println("asd")
+}
+func NewClient() {
+	s := server.NewClient()
+	res := server.Resources{map[string]int64{}}
+	sleep := time.Second / 10
 
-
-	db, err := psql.Psql_connect()
-	if err != nil { return }
- 
-	data, err := db.InnateQuery("select id, name from items order by id;", "items")
-	if err != nil { return }
-	fmt.Println(data)
-	// for _, d := range data {
-		// fmt.Println(d)
-	// }	
-
-
-	// s := server.NewClient()
-	// res := server.Resources{map[string]uint64{}}
-	// sleep := time.Second / 10
-// 
-	// for ;s.AboutClient.Running ;time.Sleep(sleep) {
-		// res.Materials["Ore"] += 1
-		// if res.Materials["Ore"] > 10 {
-			// err := s.Send.Encode(&server.MsgFormat{
-				// MsgCode: 6, 
-				// Resources: res})
-			// if err != nil {
-				// log.Printf("Can't sent msg: %v\n", err)
-				// s.Conn.Close()
-				// s.AboutClient.Running = false
-				// break
-			// }
-			// res = server.Resources{map[string]uint64{}}
-		// }
-	// }
+	for ;s.AboutClient.Running ;time.Sleep(sleep) {
+		res.Materials["Ore"] += 1
+		if res.Materials["Ore"] > 10 {
+			err := s.Send.Encode(&server.MsgFormat{
+				MsgCode: 6, 
+				Resources: res})
+			if err != nil {
+				log.Printf("Can't sent msg: %v\n", err)
+				s.Conn.Close()
+				s.AboutClient.Running = false
+				break
+			}
+			res = server.Resources{map[string]int64{}}
+		}
+	}
 }
 func ServerConn(s *server.Client) {
 	sleep := time.Second
