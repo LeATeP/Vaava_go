@@ -37,6 +37,12 @@ type Stats struct {
 	InBytes  int64
 	OutBytes int64
 }
+type Client struct {
+	Conn        net.Conn
+	Send        *gob.Encoder
+	Receive     *gob.Decoder
+	AboutClient *AboutClientInfo
+}
 type AboutClientInfo struct {
 	Id           int64
 	Start        time.Time
@@ -45,12 +51,6 @@ type AboutClientInfo struct {
 	Shutdown     bool
 	ContainerId  string
 	Unit         UnitInfo
-}
-type Client struct {
-	Conn        net.Conn
-	Send        *gob.Encoder
-	Receive     *gob.Decoder
-	AboutClient *AboutClientInfo
 }
 type UnitInfo struct {
 	Id       int64

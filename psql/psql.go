@@ -7,47 +7,49 @@ import (
 	"log"
 )
 
+var psql *sql.DB
+
 // Psql_connect is main initialize fn, that connect to db and give interface
 func PsqlConnect() (PsqlInterface, error) {
-	var p Psql
+	var cmd CmdMap
 	var err error
 	config := init_config()
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.host, config.port, config.user, config.password, config.dbname)
 	// prepare connecting to db
-	p.Sql, err = sql.Open("postgres", psqlconn)
+	psql, err = sql.Open("postgres", psqlconn)
 	if err != nil {
-		return p, err
+		return nil, err
 	}
 	// checking connection if working
-	err = p.Sql.Ping()
+	err = psql.Ping()
 	if err != nil {
-		return p, err
+		return nil, err
 	}
-	p.QueryMap = make(map[int64]MyQuery)
-	var pA PsqlInterface = p
+	cmd.QueryMap = make(map[int64]MyQuery)
+	var pA PsqlInterface = cmd
 	return pA, nil
 }
 
 // func NewQuery accept sql cmd and return int identifier that used for Psql to find the right  Query
-func (p Psql) NewQuery(s string) (int64, error) {
-	var length int64 = int64(len(p.QueryMap) + len(p.ExecMap))
-	prep, err := p.Sql.Prepare(s)
+func (p CmdMap) NewQuery(cmd string) (length int64, err error) {
+	length = int64(len(p.QueryMap) + len(p.ExecMap))
+	prep, err := psql.Prepare(cmd)
 	if err != nil {
 		log.Println(err)
 		return -1, err
 	}
-	p.QueryMap[length] = MyQuery{Query: s, PrepStmt: prep}
+	p.QueryMap[length] = MyQuery{Query: cmd, PrepStmt: prep}
 	return length, nil
 }
-func (p Psql) ExecQuery(i int64, args ...any) ([]map[string]any, error) {
+func (p CmdMap) ExecQuery(i int64, args ...any) ([]map[string]any, error) {
 	return p.QueryMap[i].runPrepQuery(args...)
 }
-func (p Psql) ExecCmd(i int64, args ...any) error {
+func (p CmdMap) ExecCmd(i int64, args ...any) error {
 	_, err := p.QueryMap[i].PrepStmt.Exec(args...)
 	return err
 }
-func (p Psql) CloseQuery(i int64) {
+func (p CmdMap) CloseQuery(i int64) {
 	p.QueryMap[i].PrepStmt.Close()
 }
 
@@ -77,7 +79,7 @@ func (q MyQuery) runPrepQuery(args ...any) ([]map[string]any, error) {
 		return nil, err
 	}
 	if len(rowsStack) == 0 {
-		return maps, fmt.Errorf("0 rows was received")
+		return nil, fmt.Errorf("0 rows was received")
 	}
 	maps = convetIntoMap(rowsStack, columns)
 	return maps, nil

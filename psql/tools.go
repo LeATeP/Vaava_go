@@ -26,9 +26,9 @@ type MyQuery struct {
 	// TableName 	string
 }
 
+
 // DBStruct is to be used as a `connection` handler, for method to use
-type Psql struct {
-	Sql      *sql.DB
+type CmdMap struct {
 	QueryMap map[int64]MyQuery // key: Table Name
 	ExecMap  map[int64]MyQuery // key: Table Name
 }

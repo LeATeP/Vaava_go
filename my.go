@@ -6,17 +6,11 @@ import (
 )
 
 var result []map[string]any
-
+var a int64 = 10
 func main() {
 	p, _ := psql.PsqlConnect()
-	selectItemsId := p.NewQuery("select * from items order by id;")
-	updateItemsId := p.NewQuery("update items set amount = amount + $1 where id = 1;")
-
-	result, _ = p.ExecQuery(selectItemsId)
-	fmt.Println(result[0]["amount"])
-
-	p.ExecCmd(updateItemsId, 100)
-	
-	result, _ = p.ExecQuery(selectItemsId)
-	fmt.Println(result[0]["amount"])
+	selectItemsId, _ := p.NewQuery("select * from items order by id;")
+	// updateItemsId := p.NewQuery("update items set amount = amount + $1 where id = 1;")
+	data, _ := p.ExecQuery(selectItemsId, )
+	fmt.Println(data[0])
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
@@ -17,11 +18,14 @@ func NewClient() *Client {
 		Receive: 	 	  gob.NewDecoder(conn),
 		Send: 			  gob.NewEncoder(conn),
 		AboutClient: &AboutClientInfo{
-			Id: 		  1,
 			Start: 		  time.Now().UTC(),
 			Running:  	  true,
-			ContainerId:  "693210",
-			TickDataSend: time.Second,
+			ContainerId:  getHostName(),
 		},
 	}
+}
+
+// return hostname from the env variable
+func getHostName() string {
+	return os.Getenv("HOSTNAME")
 }
