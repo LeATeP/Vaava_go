@@ -41,7 +41,21 @@ type Client struct {
 	Conn        net.Conn
 	Send        *gob.Encoder
 	Receive     *gob.Decoder
-	AboutClient *AboutClientInfo
+	AboutClient AboutClientInfo
+	FromServer FromServer
+	FromClient FromClient
+}
+type FromClient struct {
+	ClientId int64 // id to comfirm that client is indeed the same
+	StartTime time.Duration // when client started working
+	ContainerId string // hostname
+}
+type FromServer struct {
+	ClientId int64 // assigned Client Id by server
+	UnitId int64   // free unit assigned to client
+	TickSpeed int64 // time between server ticks
+	Running bool
+	shutdown bool
 }
 type AboutClientInfo struct {
 	Id           int64
@@ -62,7 +76,7 @@ type UnitInfo struct {
 type MsgFormat struct {
 	MsgCode   int64
 	Resources Resources
-	CInfo     *AboutClientInfo
+	CInfo     AboutClientInfo
 	SInfo     Info
 }
 type Resources struct {

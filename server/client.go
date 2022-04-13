@@ -9,7 +9,7 @@ import (
 )
 
 func NewClient() *Client {
-	conn, err := net.Dial("tcp", connectToLocal) // listen for clients
+	conn, err := net.Dial("tcp", connectToLocal) // connect to a server
 	if err != nil {
 		log.Printf("[failed to connect]: %v\n", err)
 	}
@@ -17,15 +17,10 @@ func NewClient() *Client {
 		Conn: 		 	  conn,
 		Receive: 	 	  gob.NewDecoder(conn),
 		Send: 			  gob.NewEncoder(conn),
-		AboutClient: &AboutClientInfo{
+		AboutClient: AboutClientInfo{
 			Start: 		  time.Now().UTC(),
 			Running:  	  true,
-			ContainerId:  getHostName(),
+			ContainerId:  os.Getenv("HOSTNAME"),
 		},
 	}
-}
-
-// return hostname from the env variable
-func getHostName() string {
-	return os.Getenv("HOSTNAME")
 }

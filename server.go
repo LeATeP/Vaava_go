@@ -15,10 +15,10 @@ var p psql.PsqlInterface
 var res server.Resources // type of data received from client
 
 const (
-	selectTable      = `select * from items order by id`
-	checkIfUnitFree	 = `select * from unitInfo where containerId = null`
+	selectTable      = `select * from items order by id;`
+	checkIfUnitFree  = `select * from unit_info where container_id is null;`
 	updateItemAmount = `update items set amount = amount + $1 where id = $2;`
-	unitsInfo        = `select * from unitInfo where containerId = null`
+	unitsInfo        = `select * from unit_info where container_id is null;`
 )
 
 func main() {
@@ -42,6 +42,8 @@ func main() {
 // query database to get necessary info
 func GetInfo() ([]map[string]any, error) {
 	id, err := p.NewQuery(unitsInfo)
+	defer p.CloseQuery(id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +51,6 @@ func GetInfo() ([]map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.CloseQuery(id)
 	return data, nil
 }
 
@@ -84,45 +85,48 @@ func AcceptConn(i int64) {
 		Receive: gob.NewDecoder(conn),
 		Send:    gob.NewEncoder(conn),
 	}
+	if !SendInfoToClient(i) {
+		disconnectClient(i)
+		return
+	}
 	go ManageConnection(i)
-	GetUnitsInfo()
-	SendInfoToClient(i)
 }
 
-
-// getting info from table `unit`
-func GetUnitsInfo() {}
-
 // check if unit is available in table `unit_info`
-func CheckIfUnitAvailable() (map[string]any, bool) {
+func CheckIfUnitAvailable() int64 {
 	id, err := p.NewQuery(checkIfUnitFree)
+	defer p.CloseQuery(id)
 	if err != nil {
-		return nil, false
+		return -1
 	}
 	data, err := p.ExecQuery(id)
 	if err != nil {
-		return nil, false
+		return -1
 	}
-	p.CloseQuery(id)
 	if len(data) == 0 {
-		return nil, false
+		return -1
 	}
-	return data[0], true
+	return data[0]["unit_id"].(int64)
 }
 
-func SendInfoToClient(i int64) {
+func SendInfoToClient(i int64) bool {
+	unitId := CheckIfUnitAvailable()
+
+	if unitId == -1 {
+		log.Printf("[Error in getting info from db(%v)]", "SendInfoToClient")
+		return false
+	}
 	client := srv.ClientConn[i]
-	CheckIfUnitAvailable()
-	client.AboutClient = &server.AboutClientInfo{
+	client.AboutClient = server.AboutClientInfo{
 		Id:           i,
 		TickDataSend: time.Second,
+		Running: true,
 		Unit: server.UnitInfo{
-			Id:     0,
-			Name:   "Miner",
-			Status: "idle",
+			Id: unitId,
 		},
 	}
-
+	client.Send.Encode(&server.MsgFormat{MsgCode: 2, CInfo: client.AboutClient})
+	return true
 }
 
 // send necessary info to client about server
@@ -130,22 +134,19 @@ func SendInfoToClient(i int64) {
 func ManageConnection(i int64) {
 	var msg server.MsgFormat
 	client := srv.ClientConn[i]
+	defer disconnectClient(i)
 	for {
 		msg = server.MsgFormat{}
 		if err := client.Receive.Decode(&msg); err != nil {
 			log.Printf("%v [err]: %v\n", i, err) // well would be to put client identifiers like containerId and stuff
-			client.Conn.Close()
-			delete(srv.ClientConn, i)
 			return
 		}
 		switch msg.MsgCode {
 		case 1: // get ping that client is active
 		case 2: // get info about client
-			client.AboutClient = msg.CInfo
 		case 3: // something changed in client
 		case 4: // client shutting down
-			client.Conn.Close()
-			delete(srv.ClientConn, i)
+			fmt.Println("client shutting down ", i)
 			return
 		case 5: // client reloading
 		case 6: // update resources
@@ -156,4 +157,10 @@ func ManageConnection(i int64) {
 			fmt.Println("0, something wrong")
 		}
 	}
+}
+func disconnectClient(i int64) {
+	log.Printf("disconnecting %v", i)
+	client := srv.ClientConn[i]
+	client.Conn.Close()
+	delete(srv.ClientConn, i)
 }
