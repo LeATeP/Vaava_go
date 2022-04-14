@@ -37,20 +37,10 @@ func main() {
 	}
 	mining() // main production thread, generating loot
 }
-func isServerReady() bool { // 5 second to check if server have send information
-	for i := 0; !client.FromServer.Running && i < 10; i++ {
-		time.Sleep(time.Second / 2)
-	}
-	return client.FromServer.Running
-}
-
-func sendInfoToServer() {
-	client.Send.Encode(&server.Message{MsgCode: 2, FromClient: client.FromClient})
-}
 
 func mining() {
-	var err error
 	defer preprareToShutDown()
+	var err error
 
 	// starting main loop
 	for ; client.FromClient.Running; time.Sleep(client.FromServer.TickSpeed) {
@@ -60,12 +50,6 @@ func mining() {
 			return
 		}
 	}
-}
-func preprareToShutDown() {
-	client.FromClient.Running = false
-	client.Send.Encode(&server.Message{MsgCode: 4, FromClient: client.FromClient})
-	client.Conn.Close()
-
 }
 func generateLoot() *server.Message {
 	res.Materials = map[string]int64{}
@@ -79,31 +63,4 @@ func calculateChance(num int64) int64 {
 		return 1
 	}
 	return 0
-}
-
-func recvServer() {
-	var err error
-	var msg server.Message
-	defer preprareToShutDown()
-
-	for client.FromClient.Running {
-		msg = server.Message{}
-		if err = client.Receive.Decode(&msg); err != nil {
-			log.Printf("[Error in receiving msg]: %v", err)
-			return
-		}
-		switch msg.MsgCode {
-		case 1: // ping, saying that server is still alive
-		case 2: // get info about the server
-			client.FromServer = msg.FromServer
-		case 3: // signal to change settings to...
-		case 4: // signal to shutdown
-			log.Fatalln("Signal to shutdown at")
-			preprareToShutDown()
-			return
-		case 5: // signal to reload
-		default:
-			log.Println("0, something wrong")
-		}
-	}
 }
