@@ -4,11 +4,12 @@ import (
 	"encoding/gob"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
 func NewClient() *Client {
-	conn, err := net.Dial("tcp", connectToLocal) // listen for clients
+	conn, err := net.Dial("tcp", connectToLocal) // connect to a server
 	if err != nil {
 		log.Printf("[failed to connect]: %v\n", err)
 	}
@@ -16,12 +17,10 @@ func NewClient() *Client {
 		Conn: 		 	  conn,
 		Receive: 	 	  gob.NewDecoder(conn),
 		Send: 			  gob.NewEncoder(conn),
-		AboutClient: &AboutClientInfo{
-			Id: 		  1,
+		AboutClient: AboutClientInfo{
 			Start: 		  time.Now().UTC(),
 			Running:  	  true,
-			ContainerId:  "693210",
-			TickDataSend: time.Second,
+			ContainerId:  os.Getenv("HOSTNAME"),
 		},
 	}
 }
