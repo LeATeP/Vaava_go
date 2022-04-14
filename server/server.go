@@ -2,24 +2,26 @@ package server
 
 import (
 	"net"
+	"os"
 	"time"
 )
 
-func NewServer() *Server {
-	info   := Info{
-		Id: 		 "0",
-		Name: 		 "main",
-		ContainerId: "",
-		MaxLoad: 	 100,
+func NewServer() (*Server, error) {
+	ls, err := net.Listen("tcp", listenToLocal)
+	if err != nil {
+		return nil, err
 	}
-	ls, _  := net.Listen("tcp", listenToLocal)
-	server := Server{
-		Start: 		time.Now().UTC(),
-		Info: 		info,
-		Running: 	true,
-		Stats: 		&Stats{},
+	return &Server{
+		Start: time.Now().UTC(),
+		Info: Info{
+			SrvId:       "0",
+			SrvName:     "main",
+			ContainerId: os.Getenv("HOSTNAME"),
+			MaxLoad:     100,
+		},
+		Running:    true,
+		Stats:      SrvStats{},
 		ClientConn: map[int64]*Client{},
-		Listener: 	ls,
-	}
-	return &server
+		Listener:   ls,
+	}, nil
 }

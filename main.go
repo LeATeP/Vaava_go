@@ -20,26 +20,40 @@ var (
 )
 
 func main() {
+	var err error
 	res.Materials = map[string]int64{}
+	client, err = server.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	fmt.Println("Client Started")
-	time.Sleep(time.Second / 2) // testing
 
-	client = server.NewClient()
 	sendInfoToServer()
-	go mining()  // main production thread, generating loot
-	recvServer() // main loop, listening to server
+	go recvServer() // main loop, listening to server
+	if !isServerReady() {
+		log.Fatalln("Server is not ready")
+		return
+	}
+	mining() // main production thread, generating loot
 }
+func isServerReady() bool { // 5 second to check if server have send information
+	for i := 0; !client.FromServer.Running && i < 10; i++ {
+		time.Sleep(time.Second / 2)
+	}
+	return client.FromServer.Running
+}
+
 func sendInfoToServer() {
-	client.Send.Encode(&server.MsgFormat{MsgCode: 2, CInfo: client.AboutClient})
+	client.Send.Encode(&server.Message{MsgCode: 2, FromClient: client.FromClient})
 }
 
 func mining() {
 	var err error
-	var sleep time.Duration = time.Second
 	defer preprareToShutDown()
 
 	// starting main loop
-	for ; client.AboutClient.Running; time.Sleep(sleep) {
+	for ; client.FromClient.Running; time.Sleep(client.FromServer.TickSpeed) {
 		err = client.Send.Encode(generateLoot())
 		if err != nil {
 			log.Printf("Can't sent msg: %v\n", err)
@@ -48,15 +62,16 @@ func mining() {
 	}
 }
 func preprareToShutDown() {
-	client.Send.Encode(&server.MsgFormat{MsgCode: 4})
+	client.FromClient.Running = false
+	client.Send.Encode(&server.Message{MsgCode: 4, FromClient: client.FromClient})
 	client.Conn.Close()
-	client.AboutClient.Running = false
+
 }
-func generateLoot() *server.MsgFormat {
+func generateLoot() *server.Message {
 	res.Materials = map[string]int64{}
 	res.Materials["Rock"] += calculateChance(rockChance)
 	fmt.Printf("+%v: Mined\n", res.Materials["Rock"])
-	return &server.MsgFormat{MsgCode: 6, Resources: res}
+	return &server.Message{MsgCode: 6, Resources: res}
 }
 
 func calculateChance(num int64) int64 {
@@ -68,11 +83,11 @@ func calculateChance(num int64) int64 {
 
 func recvServer() {
 	var err error
-	var msg server.MsgFormat
+	var msg server.Message
 	defer preprareToShutDown()
 
-	for client.AboutClient.Running {
-		msg = server.MsgFormat{}
+	for client.FromClient.Running {
+		msg = server.Message{}
 		if err = client.Receive.Decode(&msg); err != nil {
 			log.Printf("[Error in receiving msg]: %v", err)
 			return
@@ -80,9 +95,11 @@ func recvServer() {
 		switch msg.MsgCode {
 		case 1: // ping, saying that server is still alive
 		case 2: // get info about the server
+			client.FromServer = msg.FromServer
 		case 3: // signal to change settings to...
 		case 4: // signal to shutdown
 			log.Fatalln("Signal to shutdown at")
+			preprareToShutDown()
 			return
 		case 5: // signal to reload
 		default:
