@@ -16,10 +16,16 @@ import (
 var client *server.Client
 var res server.Resources
 var (
-	rockChance int64 = 1
+	dropChance map[string]int64 = map[string]int64{
+		"Rock": 5,
+	}
+	maxDropAmount map[string]int64 = map[string]int64{
+		"Rock": 15,
+	}
 )
 
 func main() {
+	rand.Seed(time.Now().UnixMicro())
 	var err error
 	res.Materials = map[string]int64{}
 	client, err = server.NewClient()
@@ -43,7 +49,7 @@ func mining() {
 	var err error
 
 	// starting main loop
-	for ; client.FromClient.Running; time.Sleep(client.FromServer.TickSpeed) {
+	for ; client.FromClient.Running ; time.Sleep(client.FromServer.TickSpeed) {
 		err = client.Send.Encode(generateLoot())
 		if err != nil {
 			log.Printf("Can't sent msg: %v\n", err)
@@ -52,14 +58,27 @@ func mining() {
 	}
 }
 func generateLoot() *server.Message {
+	dropList := []string{"Rock"}
 	res.Materials = map[string]int64{}
-	res.Materials["Rock"] += calculateChance(rockChance)
+	for _, k := range dropList {
+		res.Materials[k] += multipleChances(k)
+	}
 	fmt.Printf("+%v: Mined\n", res.Materials["Rock"])
 	return &server.Message{MsgCode: 6, Resources: res}
 }
 
-func calculateChance(num int64) int64 {
-	if rand.Int63n(num) == 0 {
+func multipleChances(name string) (total int64) {
+	for i := int64(0); i < maxDropAmount[name]; i++ {
+		total += drop(dropChance[name])
+	}
+	return
+}
+
+func drop(chance int64) int64 {
+	if chance < 2 {
+		return 1
+	}
+	if rand.Int63n(chance) == 0 {
 		return 1
 	}
 	return 0

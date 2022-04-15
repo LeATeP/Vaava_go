@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"server"
 	"time"
@@ -40,6 +41,7 @@ func isServerReady() bool { // 5 second to check if server have send information
 	for i := 0; !client.FromServer.Running && i < 10; i++ {
 		time.Sleep(time.Second / 2)
 	}
+	fmt.Println(client.FromServer)
 	return client.FromServer.Running
 }
 func sendInfoToServer() {
