@@ -16,10 +16,16 @@ import (
 var client *server.Client
 var res server.Resources
 var (
-	rockChance int64 = 1
+	dropChance map[string]int64 = map[string]int64{
+		"Rock": 5,
+	}
+	maxDropAmount map[string]int64 = map[string]int64{
+		"Rock": 15,
+	}
 )
 
 func main() {
+	rand.Seed(time.Now().UnixMicro())
 	var err error
 	res.Materials = map[string]int64{}
 	client, err = server.NewClient()
@@ -37,23 +43,13 @@ func main() {
 	}
 	mining() // main production thread, generating loot
 }
-func isServerReady() bool { // 5 second to check if server have send information
-	for i := 0; !client.FromServer.Running && i < 10; i++ {
-		time.Sleep(time.Second / 2)
-	}
-	return client.FromServer.Running
-}
-
-func sendInfoToServer() {
-	client.Send.Encode(&server.Message{MsgCode: 2, FromClient: client.FromClient})
-}
 
 func mining() {
+	defer preprareToShutDown("mining")
 	var err error
-	defer preprareToShutDown()
 
 	// starting main loop
-	for ; client.FromClient.Running; time.Sleep(client.FromServer.TickSpeed) {
+	for ; client.FromClient.Running ; time.Sleep(client.FromServer.TickSpeed) {
 		err = client.Send.Encode(generateLoot())
 		if err != nil {
 			log.Printf("Can't sent msg: %v\n", err)
@@ -61,49 +57,29 @@ func mining() {
 		}
 	}
 }
-func preprareToShutDown() {
-	client.FromClient.Running = false
-	client.Send.Encode(&server.Message{MsgCode: 4, FromClient: client.FromClient})
-	client.Conn.Close()
-
-}
 func generateLoot() *server.Message {
+	dropList := []string{"Rock"}
 	res.Materials = map[string]int64{}
-	res.Materials["Rock"] += calculateChance(rockChance)
+	for _, k := range dropList {
+		res.Materials[k] += multipleChances(k)
+	}
 	fmt.Printf("+%v: Mined\n", res.Materials["Rock"])
 	return &server.Message{MsgCode: 6, Resources: res}
 }
 
-func calculateChance(num int64) int64 {
-	if rand.Int63n(num) == 0 {
+func multipleChances(name string) (total int64) {
+	for i := int64(0); i < maxDropAmount[name]; i++ {
+		total += drop(dropChance[name])
+	}
+	return
+}
+
+func drop(chance int64) int64 {
+	if chance < 2 {
+		return 1
+	}
+	if rand.Int63n(chance) == 0 {
 		return 1
 	}
 	return 0
-}
-
-func recvServer() {
-	var err error
-	var msg server.Message
-	defer preprareToShutDown()
-
-	for client.FromClient.Running {
-		msg = server.Message{}
-		if err = client.Receive.Decode(&msg); err != nil {
-			log.Printf("[Error in receiving msg]: %v", err)
-			return
-		}
-		switch msg.MsgCode {
-		case 1: // ping, saying that server is still alive
-		case 2: // get info about the server
-			client.FromServer = msg.FromServer
-		case 3: // signal to change settings to...
-		case 4: // signal to shutdown
-			log.Fatalln("Signal to shutdown at")
-			preprareToShutDown()
-			return
-		case 5: // signal to reload
-		default:
-			log.Println("0, something wrong")
-		}
-	}
 }

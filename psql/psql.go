@@ -5,9 +5,13 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
+	"sync"
 )
 
-var psql *sql.DB
+var (
+	psql  *sql.DB
+	mutex = sync.RWMutex{}
+)
 
 // Psql_connect is main initialize fn, that connect to db and give interface
 func PsqlConnect() (PsqlInterface, error) {
@@ -32,31 +36,50 @@ func PsqlConnect() (PsqlInterface, error) {
 }
 
 // func NewQuery accept sql cmd and return int identifier that used for Psql to find the right  Query
-func (p CmdMap) NewQuery(cmd string) (length int64, err error) {
-	length = int64(len(p.QueryMap) + len(p.ExecMap))
+func (p CmdMap) NewQuery(cmd string) (id int64, err error) {
+	mutex.Lock()
+	id = int64(len(p.QueryMap) + len(p.ExecMap))
+	mutex.Unlock()
+
 	prep, err := psql.Prepare(cmd)
 	if err != nil {
 		log.Println(err)
 		return -1, err
 	}
-	p.QueryMap[length] = MyQuery{Query: cmd, PrepStmt: prep}
-	return length, nil
+	mutex.Lock()
+	p.QueryMap[id] = MyQuery{Query: cmd, PrepStmt: prep}
+	mutex.Unlock()
+	return id, nil
 }
 func (p CmdMap) ExecQuery(i int64, args ...any) ([]map[string]any, error) {
-	return p.QueryMap[i].runPrepQuery(args...)
+	result, err := p.QueryMap[i].runPrepQuery(args...)
+	return result, err
 }
 func (p CmdMap) ExecCmd(i int64, args ...any) error {
+	mutex.Lock()
 	_, err := p.QueryMap[i].PrepStmt.Exec(args...)
+	mutex.Unlock()
 	return err
 }
 func (p CmdMap) CloseQuery(i int64) {
+	mutex.Lock()
 	p.QueryMap[i].PrepStmt.Close()
+	delete(p.QueryMap, i)
+	mutex.Unlock()
+}
+
+// fast query that prepare and closing after completing exec query, returning only error
+func (p CmdMap) ExecCmdFast(cmd string, args ...any) {
+	id, _ := p.NewQuery(cmd)
+	p.ExecCmd(id, args...)
+	p.CloseQuery(id)
 }
 
 func (q MyQuery) runPrepQuery(args ...any) ([]map[string]any, error) {
-	maps := []map[string]any{}
 	rowsStack := [][]any{}
+	mutex.Lock()
 	rows, err := q.PrepStmt.Query(args...)
+	mutex.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -81,56 +104,6 @@ func (q MyQuery) runPrepQuery(args ...any) ([]map[string]any, error) {
 	if len(rowsStack) == 0 {
 		return nil, fmt.Errorf("0 rows was received")
 	}
-	maps = convetIntoMap(rowsStack, columns)
+	maps := convetIntoMap(rowsStack, columns)
 	return maps, nil
 }
-
-// func (d *DBStruct) InnateQuery(query string, tableName string) ([]ItemsTable, error) {
-// rows, err := d.DB.Query(query)
-// if err != nil {
-// log.Printf("[Err in Query]: %v\n", err)
-// return []ItemsTable{}, nil
-// }
-// sliceData, err := iterRows(rows, tableName)
-// if err != nil {
-// log.Printf("[Err in iterRows] --- %v\n", err)
-// }
-// return sliceData, nil
-//
-// }
-// func iterRows(rows *sql.Rows, tableName string) ([]ItemsTable, error) {
-// sliceData := []ItemsTable{}
-// columns, _   := rows.Columns()
-// defer rows.Close()
-// for rows.Next() {
-// data, pointers := itemsPointers(columns, tableName)
-// if err := rows.Scan(pointers...); err != nil {
-// log.Printf("[Err in iter of rows]: %v\n", err)
-// rows.Close()
-// }
-// sliceData = append(sliceData, *data)
-// }
-// rows.Close()
-// if err := rows.Err(); err != nil {
-// log.Printf("[rows.Err]: %v\n", err)
-// return []ItemsTable{}, err
-// }
-// return sliceData, nil
-// }
-// func itemsPointers(col []string, tableName string) (*ItemsTable, []any) {
-// data := new(Items)
-// p    := []any{}
-// item := map[string]any{
-// "id": 			&data.Id,
-// "name": 		&data.Name,
-// "amount": 		&data.Amount,
-// "amount_limit": &data.MaxAmount,
-// }
-// for _, colName := range col {
-// value, exist := item[colName]
-// if exist {
-// p = append(p, value)
-// }
-// }
-// return data, p
-// }

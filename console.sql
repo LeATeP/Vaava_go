@@ -3,35 +3,53 @@ create table unit
 (
     id     serial primary key,
     name   text default 'Kai',
+    class  text default null,
     grade  text default 'Common',
     status text default 'Idle',
     level  int  default 0,
     xp     int  default 0
 );
 select *
-from unit order by id;
+from unit
+order by id;
 
 insert into unit (name)
-values ('Miner'), ('Guard'), ('Healer'),
-       ('Adventure'), ('Blacksmith'), ('Magician');
+values ('Miner'),
+       ('Guard'),
+       ('Healer'),
+       ('Adventure'),
+       ('Blacksmith'),
+       ('Magician');
 
 
 drop table if exists unit_info;
 create table unit_info
 (
-    unit_id      int references unit(id),
+    id           int references unit (id),
     attack       int                      default 1,
     defense      int                      default 0,
+    health       int                      default 1,
     mana         int                      default 0,
-    fraction     text                     default 'main',
     location     text                     default null,
     targeting    int references unit (id) default null,
-    container_id text                     default null
+    container_id text                     default null,
+    running      bool                     default false
 );
 select *
-from unit_info;
+from unit_Info;
 
+insert into unit_info (id)
+values (1),
+       (2),
+       (3),
+       (4),
+       (5),
+       (6);
 
+update unit_info
+    set container_id = 'asd',
+        running = true
+where id = 1;
 
 drop table if exists items;
 create table items
@@ -45,35 +63,25 @@ select id, name, amount
 from items;
 
 insert into items (name)
-values ('Rock'),
-       ('Mana_crystal'),
-       ('Iron_ore');
+values ('Ore');
+-- values ('Rock'),
+--        ('Mana_crystal'),
+--        ('Iron_ore');
 
 update items
-set amount = amount +1
+set amount = amount + 1
 where id = 1;
 
 
 drop table if exists levels;
-create table levels (
+create table levels
+(
     level int default null,
-    xp int default null,
+    xp    int default null,
     total int default null
 );
-select * from levels;
+select *
+from levels;
 
 insert into levels(level, xp, total)
 values (1, 0, 0);
-
-
--- SELECT
---     id,
---     points,
---     round(points * 1.0 / sum(points) OVER (), 3) as piece_of_pie,
---     round(points * 1.0 / sum(points) OVER (), 3) * 1000000 as piece_of_pie,
---     sum(points) OVER ()
--- FROM bonuses
--- order by 3 desc;
-
-
-

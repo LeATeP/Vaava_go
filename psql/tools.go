@@ -37,6 +37,7 @@ type PsqlInterface interface {
 	ExecQuery(i int64, args ...any) ([]map[string]any, error)
 	ExecCmd(i int64, args ...any) error
 	CloseQuery(i int64)
+	ExecCmdFast(cmd string, args ...any)  
 }
 
 func init_config() *con_config {

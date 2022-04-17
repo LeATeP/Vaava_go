@@ -29,7 +29,7 @@ func NewClient() (*Client, error) {
 		Send:    gob.NewEncoder(conn),
 		FromClient: FromClient{
 			StartTime:   time.Now().UTC(),
-			ContainerId: os.Getenv("HOSTNAME"),
+			ContainerId: os.Getenv("HOST"),
 			Running:     true,
 		},
 	}, nil
