@@ -45,7 +45,7 @@ func main() {
 }
 
 func mining() {
-	defer preprareToShutDown()
+	defer preprareToShutDown("mining")
 	var err error
 
 	// starting main loop

@@ -8,7 +8,7 @@ import (
 )
 
 func recvServer() {
-	defer preprareToShutDown()
+	defer preprareToShutDown("recvServer")
 	var err error
 	var msg server.Message
 
@@ -22,6 +22,7 @@ func recvServer() {
 		case 1: // ping, saying that server is still alive
 		case 2: // get info about the server
 			client.FromServer = msg.FromServer
+			client.FromClient.Running = msg.FromServer.Running
 		case 3: // signal to change settings to...
 		case 4: // signal to shutdown
 			log.Fatalln("Signal to shutdown at")
@@ -32,7 +33,8 @@ func recvServer() {
 		}
 	}
 }
-func preprareToShutDown() {
+func preprareToShutDown(name string) {
+	fmt.Printf("Shutting down at %v", name)
 	client.FromClient.Running = false
 	client.Send.Encode(&server.Message{MsgCode: 4, FromClient: client.FromClient})
 	client.Conn.Close()
