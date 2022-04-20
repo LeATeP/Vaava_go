@@ -49,3 +49,4 @@ func isServerReady() bool { // 5 second to check if server have send information
 func sendInfoToServer() {
 	client.Send.Encode(&server.Message{MsgCode: 2, FromClient: client.FromClient})
 }
+
